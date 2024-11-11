@@ -102,8 +102,7 @@ def sigmoid(x: float) -> float:
 
 def relu(x: float) -> float:
     """Returns input value if positive, otherwise returns 0"""
-    val = max(0, x)
-    return val
+    return float(x if x >= 0 else 0.0)
 
 
 # - log

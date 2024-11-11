@@ -53,7 +53,7 @@ class History:
 
     last_fn: Optional[Type[Function]] = None
     ctx: Optional[Context] = None
-    inputs: Sequence[Tensor] = ()
+    inputs: Sequence["Tensor"] = ()  # type: ignore
 
 
 _tensor_count = 0
@@ -93,6 +93,9 @@ class Tensor:
             self.name = str(self.unique_id)
 
         self.f = backend
+
+    def __hash__(self):
+        return id(self)
 
     def requires_grad_(self, x: bool) -> None:
         """Set the requires_grad flag"""
@@ -238,10 +241,6 @@ class Tensor:
             )
         self.grad += x
 
-    def zero_grad_(self) -> None:  # pragma: no cover
-        """Reset the derivative on this variable."""
-        self.grad = None
-
     def is_leaf(self) -> bool:
         """True if this variable created by the user (no `last_fn`)"""
         return self.history is not None and self.history.last_fn is None
@@ -380,3 +379,7 @@ class Tensor:
     def view(self, *shape: int) -> Tensor:
         """Change the shape of the tensor to a new shape with the same size"""
         return View.apply(self, tensor(list(shape)))
+
+    def zero_grad_(self) -> None:
+        """Reset the derivative on this variable."""
+        self.grad = None

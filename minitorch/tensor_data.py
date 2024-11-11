@@ -10,7 +10,7 @@ import numpy.typing as npt
 from numpy import array, float64
 from typing_extensions import TypeAlias
 
-from .operators import prod  # todo: check if prod is correct
+from .operators import prod
 
 MAX_DIMS = 32
 
@@ -46,11 +46,10 @@ def index_to_position(index: Index, strides: Strides) -> int:
         Position in storage
 
     """
-    size = len(index)
-    sum = 0
-    for i in range(size):
-        sum += index[i] * strides[i]
-    return sum
+    position = 0
+    for ind, stride in zip(index, strides):
+        position += ind * stride
+    return position
 
 
 def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
@@ -66,11 +65,11 @@ def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
         out_index : return index corresponding to position.
 
     """
-    dim = len(shape)
-
-    for i in range(dim - 1, -1, -1):  # reverse the index
-        out_index[i] = ordinal % shape[i]
-        ordinal //= shape[i]
+    step_ord = ordinal + 0
+    for i in range(len(shape) - 1, -1, -1):  # reverse the index
+        step_shape = shape[i]
+        out_index[i] = int(step_ord % step_shape)
+        step_ord = step_ord // step_shape
 
 
 def broadcast_index(
@@ -94,12 +93,12 @@ def broadcast_index(
         None
 
     """
-    big_index = big_index[-len(shape) :]  # reverse the index
-    for i in range(len(shape)):
-        if shape[i] == 1:  # broadcast
-            out_index[i] = 0
+    for i, s in enumerate(shape):
+        if s > 1:
+            out_index[i] = big_index[i + (len(big_shape) - len(shape))]
         else:
-            out_index[i] = big_index[i]  # copy
+            out_index[i] = 0
+    return None
 
     # TODO: Implement for Task 2.2.
 
@@ -121,21 +120,24 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
         IndexingError : if cannot broadcast
 
     """
-    max_len = max(len(shape1), len(shape2))
-    shape1 = (1,) * (max_len - len(shape1)) + tuple(shape1)  # left pads w 1s
-    shape2 = (1,) * (max_len - len(shape2)) + tuple(shape2)
-
-    result_shape = []
-
-    for i in range(max_len):
-        dim1, dim2 = shape1[i], shape2[i]  # same index
-        if dim1 == dim2 or dim1 == 1 or dim2 == 1:
-            result_shape.append(max(dim1, dim2))  # max of 1 and the other
+    a, b = shape1, shape2
+    m = max(len(a), len(b))
+    c_rev = [0] * m
+    a_rev = list(reversed(a))
+    b_rev = list(reversed(b))
+    for i in range(m):
+        if i >= len(a):
+            c_rev[i] = b_rev[i]
+        elif i >= len(b):
+            c_rev[i] = a_rev[i]
         else:
-            raise IndexingError(
-                f"Shapes {shape1} and {shape2} cannot be broadcasted"
-            )  # if neither is 1 and they are not equal
-    return tuple(result_shape)
+            c_rev[i] = max(a_rev[i], b_rev[i])
+            if a_rev[i] != c_rev[i] and a_rev[i] != 1:
+                raise IndexingError(f"Broadcast failure {a} {b}")
+            if b_rev[i] != c_rev[i] and b_rev[i] != 1:
+                raise IndexingError(f"Broadcast failure {a} {b}")
+    return tuple(reversed(c_rev))
+
     # TODO: Implement for Task 2.2.
 
 
@@ -276,10 +278,8 @@ class TensorData:
         ), f"Must give a position to each dimension. Shape: {self.shape} Order: {order}"
 
         new_shape = tuple(self.shape[i] for i in order)
-        new_strides = tuple(self._strides[i] for i in order)
+        new_strides = tuple(self.strides[i] for i in order)
         return TensorData(self._storage, new_shape, new_strides)
-
-        # TODO: Implement for Task 2.1.
 
     def to_string(self) -> str:
         """Convert to string"""

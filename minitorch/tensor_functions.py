@@ -141,12 +141,8 @@ class Sigmoid(Function):
     @staticmethod
     def backward(ctx: Context, grad_output: Tensor) -> Tensor:
         """Derivative of the sigmoid function"""
-        (sig,) = ctx.saved_values
-        neg_sig = sig.f.neg_map(sig)
-        return grad_output.f.mul_zip(
-            sig.f.mul_zip(sig, 1 + neg_sig),
-            grad_output,
-        )
+        sigma: Tensor = ctx.saved_values[0]
+        return sigma * (-sigma + 1.0) * grad_output
 
 
 class ReLU(Function):
