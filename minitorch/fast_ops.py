@@ -176,8 +176,8 @@ def tensor_map(
             or len(out_shape) == 0
         ):
             for i in prange(len(out)):
-                out_index: Index = np.zeros(MAX_DIMS, np.int32)  # type: ignore
-                in_index: Index = np.zeros(MAX_DIMS, np.int32)  # type: ignore
+                out_index: Index = np.zeros(MAX_DIMS, np.int32)
+                in_index: Index = np.zeros(MAX_DIMS, np.int32)
                 to_index(i, out_shape, out_index)
                 broadcast_index(out_index, out_shape, in_shape, in_index)
                 o = index_to_position(out_index, out_strides)
@@ -356,7 +356,6 @@ def _tensor_matrix_multiply(
     for batch in prange(out_shape[0]):  # Batch calc dimension, parallel
         for row in prange(out_shape[1]):  # Rows, parallel
             for col in prange(out_shape[2]):  # Columns, parallel
-                
                 # Position in A and B for this batch, row, and column
 
                 a_pos = batch * a_batch_stride + row * a_strides[1]
