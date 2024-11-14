@@ -343,36 +343,35 @@ def tensor_reduce(
         out_pos = cuda.blockIdx.x
         pos = cuda.threadIdx.x
 
-        a_index = cuda.local.array(
-            MAX_DIMS, numba.int32
-        )  # added for local access to index values
 
-        if out_pos >= out_size:  # prevents thread from going out of bounds
+        # case where thread is out of bounds
+        if out_pos >= out_size:
             return
 
-        # Calculate position in output
+        size = a_shape[reduce_dim]
+
+        # output position this block is handling
         to_index(out_pos, out_shape, out_index)
 
-        # Initialize reduction with first element
-        cache[pos] = reduce_value  # first thread value in block
+        # load the correct slice into shared memory
+        out_index[reduce_dim] = pos  # Only vary along reduce_dim
+        if pos < size:
+            j = index_to_position(out_index, a_strides)
+            cache[pos] = a_storage[j]
+        else:
+            cache[pos] = reduce_value
+        cuda.syncthreads()
 
-        # Pre-calculate input index array to prevent repeat allocations
-        for i in range(len(out_shape)):
-            a_index[i] = out_index[i]
-
-        # Loop over reduction dimension
-        for j in range(a_shape[reduce_dim]):
-            # Update only the reduction dimension index
-            a_index[reduce_dim] = j
-            in_pos = index_to_position(a_index, a_strides)
-            cache[pos] = fn(
-                cache[pos], a_storage[in_pos]
-            )  # reduces between preset/precalced cache and reset loop value
-
-        cuda.syncthreads()  # wait for all blocks to finish
-
-        # Write final reduced value to output now that all data is valid
-        out[index_to_position(out_index, out_strides)] = cache[pos]
+        # parallel reduction within shared memory
+        stride = BLOCK_DIM // 2
+        while stride > 0:
+            if pos < stride:
+                cache[pos] = fn(cache[pos], cache[pos + stride])
+            cuda.syncthreads()
+            stride //= 2
+        # write cache[0] to global memory
+        if pos == 0:
+            out[out_pos] = cache[0]
 
         # TODO: Implement for Task 3.3.
 
