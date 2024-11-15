@@ -368,7 +368,7 @@ def _tensor_matrix_multiply(
                 # batch * x_batch_stride #
 
                 # Matrix multiplication for (A,B) position
-                result = float(0)
+                result = 0.0
                 for _ in range(a_shape[2]):  # Inner product size
                     result += a_storage[a_pos] * b_storage[b_pos]
                     a_pos += a_strides[2]  # Move along row A, loop shift
