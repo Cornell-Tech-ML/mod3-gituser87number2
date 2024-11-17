@@ -184,7 +184,7 @@ def tensor_map(
 
             broadcast_index(out_index, out_shape, in_shape, in_index)
 
-            #o = index_to_position(out_index, out_strides)
+            # o = index_to_position(out_index, out_strides)
             j = index_to_position(in_index, in_strides)
 
             out[i] = fn(in_storage[j])
@@ -233,7 +233,7 @@ def tensor_zip(
 
         if i < out_size:  # guard
             to_index(i, out_shape, out_index)
-            #o = index_to_position(out_index, out_strides)
+            # o = index_to_position(out_index, out_strides)
             broadcast_index(
                 out_index, out_shape, a_shape, a_index
             )  # same zip logic from fast_ops
@@ -284,10 +284,12 @@ def _sum_practice(out: Storage, a: Storage, size: int) -> None:
     # Parallel reduction in shared memory
     stride = 1
     while stride < BLOCK_DIM:
-        if pos % (2 * stride) == 0: # follows structure discussed in class, sums block to pos[0]
+        if (
+            pos % (2 * stride) == 0
+        ):  # follows structure discussed in class, sums block to pos[0]
             cache[pos] += cache[pos + stride]
         stride *= 2
-        cuda.syncthreads() # does all parallel paths and waits, ensures that all are complete before next root level in tree
+        cuda.syncthreads()  # does all parallel paths and waits, ensures that all are complete before next root level in tree
 
     # Write result for block to global
     if pos == 0:  # pos = 0 for start of block
@@ -346,9 +348,11 @@ def tensor_reduce(
 
         if out_pos < out_size:
             cache[pos] = reduce_value  # initialize
-            to_index(out_pos, out_shape, out_index)  
+            to_index(out_pos, out_shape, out_index)
 
-            out_index[reduce_dim] = out_index[reduce_dim] * BLOCK_DIM + pos #offset by block dim
+            out_index[reduce_dim] = (
+                out_index[reduce_dim] * BLOCK_DIM + pos
+            )  # offset by block dim
 
             if out_index[reduce_dim] < a_shape[reduce_dim]:
                 cache[pos] = a_storage[index_to_position(out_index, a_strides)]
@@ -356,14 +360,16 @@ def tensor_reduce(
 
                 stride = 1
                 while stride < BLOCK_DIM:
-                    if pos % (stride * 2) == 0: #parallel binary tree
+                    if pos % (stride * 2) == 0:  # parallel binary tree
                         cache[pos] = fn(cache[pos], cache[pos + stride])
                         cuda.syncthreads()
                     stride *= 2
 
             # Send to global output
             if pos == 0:
-                out[out_pos] = cache[0]  # after binary tree reduced output is in cache[0]
+                out[out_pos] = cache[
+                    0
+                ]  # after binary tree reduced output is in cache[0]
 
         # TODO: Implement for Task 3.3.
 
