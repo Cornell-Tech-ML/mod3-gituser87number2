@@ -176,8 +176,8 @@ def tensor_map(
             or len(out_shape) == 0
         ):
             for i in prange(len(out)):
-                out_index: Index = np.zeros(MAX_DIMS, np.int32)
-                in_index: Index = np.zeros(MAX_DIMS, np.int32)
+                out_index: Index = np.empty(MAX_DIMS, np.int32)
+                in_index: Index = np.empty(MAX_DIMS, np.int32)
                 to_index(i, out_shape, out_index)
                 broadcast_index(out_index, out_shape, in_shape, in_index)
                 o = index_to_position(out_index, out_strides)
@@ -236,9 +236,9 @@ def tensor_zip(
             or (out_shape != b_shape).any()
         ):
             for i in prange(len(out)):
-                out_index: Index = np.zeros(MAX_DIMS, np.int32)
-                a_index: Index = np.zeros(MAX_DIMS, np.int32)
-                b_index: Index = np.zeros(MAX_DIMS, np.int32)
+                out_index: Index = np.empty(MAX_DIMS, np.int32)
+                a_index: Index = np.empty(MAX_DIMS, np.int32)
+                b_index: Index = np.empty(MAX_DIMS, np.int32)
                 to_index(i, out_shape, out_index)
                 o = index_to_position(out_index, out_strides)
                 broadcast_index(out_index, out_shape, a_shape, a_index)
@@ -354,8 +354,8 @@ def _tensor_matrix_multiply(
 
     # Parallel loop through batches and matrix dimensions
     for batch in prange(out_shape[0]):  # Batch calc dimension, parallel
-        for row in prange(out_shape[1]):  # Rows, parallel
-            for col in prange(out_shape[2]):  # Columns, parallel
+        for row in range(out_shape[1]):  # Rows, parallel
+            for col in range(out_shape[2]):  # Columns, parallel
                 # Position in A and B for this batch, row, and column
 
                 a_pos = batch * a_batch_stride + row * a_strides[1]
