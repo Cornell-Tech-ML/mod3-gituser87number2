@@ -38,31 +38,31 @@ PARALLEL CHECK:
 
 
 
-Parallel loop listing for  Function tensor_map.<locals>._map, C:\Users\gtown\MLE\Modules\mod3-gituser87number2\minitorch\fast_ops.py (164) 
+Parallel loop listing for  Function tensor_map.<locals>._map, C:\Users\gtown\MLE\Modules\mod3-gituser87number2\minitorch\fast_ops.py (164)
 --------------------------------------------------------------------------------------|loop #ID
-    def _map(                                                                         | 
-        out: Storage,                                                                 | 
-        out_shape: Shape,                                                             | 
-        out_strides: Strides,                                                         | 
-        in_storage: Storage,                                                          | 
-        in_shape: Shape,                                                              | 
-        in_strides: Strides,                                                          | 
-    ) -> None:                                                                        | 
-        if (                                                                          | 
+    def _map(                                                                         |
+        out: Storage,                                                                 |
+        out_shape: Shape,                                                             |
+        out_strides: Strides,                                                         |
+        in_storage: Storage,                                                          |
+        in_shape: Shape,                                                              |
+        in_strides: Strides,                                                          |
+    ) -> None:                                                                        |
+        if (                                                                          |
             (out_strides != in_strides).any()-----------------------------------------| #0
             or (out_shape != in_shape).any()------------------------------------------| #1
-            or len(out_strides) != len(in_strides)  # If need for broadcasting        | 
-            or len(out_shape) == 0                                                    | 
-        ):                                                                            | 
+            or len(out_strides) != len(in_strides)  # If need for broadcasting        |
+            or len(out_shape) == 0                                                    |
+        ):                                                                            |
             for i in prange(len(out)):------------------------------------------------| #3
-                out_index: Index = np.empty(MAX_DIMS, np.int32)                       | 
-                in_index: Index = np.empty(MAX_DIMS, np.int32)                        | 
-                to_index(i, out_shape, out_index)                                     | 
-                broadcast_index(out_index, out_shape, in_shape, in_index)             | 
-                o = index_to_position(out_index, out_strides)                         | 
-                j = index_to_position(in_index, in_strides)                           | 
-                out[o] = fn(in_storage[j])                                            | 
-        else:                                                                         | 
+                out_index: Index = np.empty(MAX_DIMS, np.int32)                       |
+                in_index: Index = np.empty(MAX_DIMS, np.int32)                        |
+                to_index(i, out_shape, out_index)                                     |
+                broadcast_index(out_index, out_shape, in_shape, in_index)             |
+                o = index_to_position(out_index, out_strides)                         |
+                j = index_to_position(in_index, in_strides)                           |
+                out[o] = fn(in_storage[j])                                            |
+        else:                                                                         |
             # When `out` and `in` are stride-aligned, avoid indexing                  |
             for i in prange(len(out)):------------------------------------------------| #2
                 out[i] = fn(in_storage[i])  # short circuit when strides are equal    |
@@ -96,7 +96,7 @@ loop is executed and reused inside the loop):
     - numpy.empty() is used for the allocation.
 None
 ZIP
- 
+
 ================================================================================
  Parallel Accelerator Optimizing:  Function tensor_zip.<locals>._zip,
 C:\Users\gtown\MLE\Modules\mod3-gituser87number2\minitorch\fast_ops.py (219)
@@ -177,7 +177,7 @@ loop is executed and reused inside the loop):
     - numpy.empty() is used for the allocation.
 None
 REDUCE
- 
+
 ================================================================================
  Parallel Accelerator Optimizing:  Function tensor_reduce.<locals>._reduce,
 C:\Users\gtown\MLE\Modules\mod3-gituser87number2\minitorch\fast_ops.py (282)
@@ -231,7 +231,7 @@ loop is executed and reused inside the loop):
     - numpy.empty() is used for the allocation.
 None
 MATRIX MULTIPLY
- 
+
 ================================================================================
  Parallel Accelerator Optimizing:  Function _tensor_matrix_multiply,
 C:\Users\gtown\MLE\Modules\mod3-gituser87number2\minitorch\fast_ops.py (309)
