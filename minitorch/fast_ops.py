@@ -170,10 +170,10 @@ def tensor_map(
         in_strides: Strides,
     ) -> None:
         if (
-            (out_strides != in_strides).any()
+            len(out_shape) == 0
+            or (out_strides != in_strides).any()
             or (out_shape != in_shape).any()
             or len(out_strides) != len(in_strides)  # If need for broadcasting
-            or len(out_shape) == 0
         ):
             for i in prange(len(out)):
                 out_index: Index = np.empty(MAX_DIMS, np.int32)
@@ -237,7 +237,7 @@ def tensor_zip(
         ):
             for i in prange(len(out)):
                 out_index: Index = np.empty(MAX_DIMS, np.int32)
-                a_index: Index = np.empty(MAX_DIMS, np.int32)
+                a_index: Index = np.empty(MAX_DIMS, np.int32)  # inits
                 b_index: Index = np.empty(MAX_DIMS, np.int32)
                 to_index(i, out_shape, out_index)
                 o = index_to_position(out_index, out_strides)

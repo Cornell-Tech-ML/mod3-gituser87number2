@@ -233,10 +233,8 @@ def tensor_zip(
 
         if i < out_size:  # guard
             to_index(i, out_shape, out_index)
-            # o = index_to_position(out_index, out_strides)
-            broadcast_index(
-                out_index, out_shape, a_shape, a_index
-            )  # same zip logic from fast_ops
+            broadcast_index(out_index, out_shape, a_shape, a_index)
+            # same zip logic from fast_ops
             j = index_to_position(a_index, a_strides)
             broadcast_index(out_index, out_shape, b_shape, b_index)
             k = index_to_position(b_index, b_strides)
@@ -541,8 +539,9 @@ def _tensor_matrix_multiply(
         cuda.syncthreads()
 
     # Write into global memory
-    if i < a_rows and j < b_cols:
+    if i < a_rows and j < b_cols:  # if in bounds
         out[batch * out_strides[0] + i * out_strides[1] + j * out_strides[2]] = result
+        # set value of out at position i, j to result
 
     # TODO: Implement for Task 3.4.
 
